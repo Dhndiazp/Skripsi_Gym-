@@ -31,7 +31,12 @@ st.markdown("""
     .badge-high { background-color: #EF4444; color: white; }
     .badge-low { background-color: #3B82F6; color: white; }
     .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.8rem; border-bottom: 2px solid #2D2D2D; padding-bottom: 6px; }
-    .tip-item { padding: 10px 14px; background-color: #1A1A1A; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #4B5563; font-size: 0.92rem; color: #E5E7EB; }
+    .tip-item {
+        padding: 10px 14px; background-color: #1A1A1A; border-radius: 8px; margin-bottom: 8px;
+        border-left: 3px solid #4B5563; font-size: 0.92rem; color: #E5E7EB;
+    }
+    .tip-title { font-weight: 700; margin-bottom: 2px; }
+    .tip-desc { font-size: 0.82rem; color: #9CA3AF; line-height: 1.4; }
     .meta-info { font-size: 0.85rem; color: #9CA3AF; margin-bottom: 12px; }
     .meta-badge {
         display: inline-block; background-color: #1F2937; padding: 3px 10px;
@@ -41,7 +46,18 @@ st.markdown("""
         padding: 12px 16px; background-color: #3D2E0A; border: 1px solid #8A6D1A;
         border-radius: 10px; color: #F5D061; font-size: 0.9rem; margin-top: 1rem;
     }
+    .disclaimer-box {
+        padding: 14px 18px; background-color: #14171C; border: 1px solid #2D2D2D;
+        border-radius: 10px; color: #9CA3AF; font-size: 0.82rem; margin-top: 2.5rem; line-height: 1.5;
+    }
     .metric-label { color: #9CA3AF; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .confidence-tag {
+        display: inline-block; padding: 2px 10px; border-radius: 6px; font-size: 0.78rem;
+        font-weight: 700; margin-left: 8px; vertical-align: middle;
+    }
+    .conf-high { background-color: #14532D; color: #4ADE80; }
+    .conf-medium { background-color: #422006; color: #FBBF24; }
+    .conf-low { background-color: #450A0A; color: #F87171; }
     .stButton>button { border-radius: 8px; font-weight: 600; padding: 0.6rem 1rem; }
 </style>
 """, unsafe_allow_html=True)
@@ -185,6 +201,90 @@ def get_workout_type(exercise_name):
     return EXERCISE_TYPE_MAP.get(exercise_name, "Cardio")
 
 # ============================================
+# 5b. DESKRIPSI SINGKAT TIAP JENIS OLAHRAGA
+# (Perbaikan poin 3: penjelasan tiap jenis latihan)
+# ============================================
+EXERCISE_DESCRIPTIONS = {
+    "Jalan santai": "Berjalan dengan kecepatan rendah, cocok untuk pemanasan atau pemulihan aktif.",
+    "Jalan cepat": "Berjalan dengan kecepatan lebih tinggi dari biasanya untuk melatih jantung.",
+    "Jalan kaki": "Aktivitas jalan kaki reguler dengan intensitas ringan hingga sedang.",
+    "Jalan cepat ringan": "Jalan cepat dengan intensitas rendah, aman untuk lansia.",
+    "Bersepeda santai": "Bersepeda dengan kecepatan santai, minim tekanan pada sendi.",
+    "Bersepeda": "Latihan kardio menggunakan sepeda dengan intensitas sedang.",
+    "Bersepeda jarak jauh": "Bersepeda dengan durasi dan jarak lebih panjang untuk daya tahan.",
+    "Bersepeda statis": "Bersepeda menggunakan sepeda statis, rendah risiko cedera.",
+    "Bersepeda statis sedang": "Bersepeda statis dengan intensitas sedang dan terkontrol.",
+    "Renang santai": "Berenang dengan tempo santai, ramah untuk sendi dan otot.",
+    "Renang": "Latihan seluruh tubuh yang rendah dampak (low-impact) di air.",
+    "Renang ringan": "Renang dengan intensitas ringan, cocok untuk pemula atau lansia.",
+    "Renang intensif": "Renang dengan intensitas tinggi untuk melatih daya tahan kardio.",
+    "Jogging ringan": "Lari pelan dengan intensitas rendah hingga sedang.",
+    "Jogging": "Lari dengan kecepatan sedang untuk melatih kebugaran kardiovaskular.",
+    "Lari Maraton": "Latihan lari jarak jauh yang membutuhkan daya tahan tinggi.",
+    "Sepak bola": "Olahraga tim yang menggabungkan lari, sprint, dan koordinasi.",
+    "Futsal": "Versi indoor sepak bola dengan intensitas tinggi dan durasi singkat.",
+    "Basket": "Olahraga tim dengan gerakan eksplosif dan lari bolak-balik.",
+    "Badminton": "Olahraga raket dengan gerakan cepat dan reaksi tinggi.",
+    "Badminton rekreasional": "Bulu tangkis santai untuk kebugaran dan hiburan.",
+    "Tenis": "Olahraga raket dengan intensitas tinggi dan banyak gerakan lateral.",
+    "Tenis rekreasional": "Tenis dengan intensitas ringan, lebih untuk kesenangan dan kebugaran dasar.",
+    "Hiking": "Mendaki alam terbuka dengan intensitas sedang hingga tinggi.",
+    "Hiking ringan": "Mendaki jalur ringan dengan medan yang relatif landai.",
+    "Hiking berat": "Mendaki medan menantang yang membutuhkan stamina lebih.",
+    "Senam aerobik ringan": "Gerakan aerobik berirama dengan intensitas rendah.",
+    "Senam aerobik": "Latihan kardio berirama untuk membakar kalori dan melatih jantung.",
+    "Senam lansia": "Senam dengan gerakan aman dan lembut khusus untuk usia lanjut.",
+    "Golf": "Olahraga dengan intensitas rendah namun melatih fokus dan koordinasi.",
+    "Aqua aerobics": "Senam aerobik di dalam air, rendah tekanan pada sendi.",
+    "Aqua aerobics intensif": "Aqua aerobik dengan intensitas lebih tinggi untuk daya tahan.",
+    "Latihan beban dasar": "Latihan menggunakan beban ringan untuk membangun kekuatan dasar.",
+    "Latihan beban": "Latihan resistensi untuk meningkatkan massa dan kekuatan otot.",
+    "Latihan beban intensif": "Latihan beban dengan volume dan intensitas tinggi.",
+    "Latihan beban progresif": "Latihan beban dengan peningkatan beban secara bertahap.",
+    "Gym": "Latihan kekuatan umum menggunakan alat-alat gym.",
+    "Gym intensitas sedang": "Latihan gym dengan beban dan repetisi tingkat sedang.",
+    "Gym intensitas tinggi": "Latihan gym dengan beban berat dan intensitas tinggi.",
+    "Latihan kekuatan ringan": "Latihan otot dengan beban ringan, aman untuk pemula/lansia.",
+    "Duduk-berdiri ringan": "Latihan fungsional sederhana untuk menjaga kekuatan otot kaki.",
+    "HIIT": "Latihan interval intensitas tinggi, bergantian sprint dan istirahat singkat (20-30 menit).",
+    "CrossFit": "Latihan fungsional intensitas tinggi yang menggabungkan kekuatan dan kardio.",
+    "Bela diri": "Latihan bela diri yang melatih kekuatan, refleks, dan ketahanan tubuh.",
+    "Sprint interval": "Lari cepat jarak pendek yang diselingi waktu pemulihan singkat.",
+    "Cross training": "Kombinasi beberapa jenis latihan untuk melatih otot secara menyeluruh.",
+    "Peregangan dasar": "Peregangan ringan untuk meningkatkan fleksibilitas dasar.",
+    "Peregangan dinamis": "Peregangan dengan gerakan aktif sebagai pemanasan sebelum olahraga.",
+    "Peregangan aktif": "Peregangan yang melibatkan gerakan terkontrol untuk mobilitas.",
+    "Peregangan": "Latihan fleksibilitas untuk menjaga kelenturan otot dan sendi.",
+    "Peregangan lembut": "Peregangan perlahan dan lembut, cocok untuk pemulihan.",
+    "Yoga pemula": "Yoga dasar dengan gerakan sederhana untuk pemula.",
+    "Yoga dasar": "Latihan yoga dengan pose dasar untuk fleksibilitas dan relaksasi.",
+    "Yoga": "Latihan tubuh dan pernapasan untuk fleksibilitas, kekuatan inti, dan relaksasi.",
+    "Yoga lanjutan": "Yoga dengan pose lebih kompleks untuk praktisi berpengalaman.",
+    "Yoga lansia": "Yoga dengan gerakan aman dan lembut untuk usia lanjut.",
+    "Pilates": "Latihan inti tubuh (core) yang fokus pada kekuatan dan postur.",
+    "Pilates pemula": "Pilates dengan gerakan dasar untuk pemula.",
+    "Pilates intensif": "Pilates dengan intensitas dan tingkat kesulitan lebih tinggi.",
+    "Mobility training": "Latihan untuk meningkatkan rentang gerak sendi dan fleksibilitas.",
+    "Tai chi": "Seni gerak lembut asal Tiongkok untuk keseimbangan dan relaksasi.",
+    "Tai chi lanjutan": "Tai chi dengan rangkaian gerakan yang lebih kompleks.",
+    "Latihan keseimbangan": "Latihan khusus untuk melatih stabilitas dan mencegah jatuh.",
+}
+
+def get_exercise_description(name):
+    return EXERCISE_DESCRIPTIONS.get(name, "Aktivitas fisik yang disesuaikan dengan profil Anda.")
+
+# ============================================
+# 5c. INTERPRETASI CONFIDENCE SCORE (Perbaikan poin 5)
+# ============================================
+def get_confidence_label(score):
+    if score >= 70:
+        return "Keyakinan Tinggi", "conf-high"
+    elif score >= 60:
+        return "Keyakinan Sedang", "conf-medium"
+    else:
+        return "Keyakinan Rendah", "conf-low"
+
+# ============================================
 # 6. HEADER
 # ============================================
 st.markdown('<p class="main-header">🏋️ Gym Intensity & Exercise Recommender</p>', unsafe_allow_html=True)
@@ -192,7 +292,7 @@ st.markdown(
     '<p class="sub-header">Interpretasi cerdas untuk profil latihan Anda. '
     'Lengkapi form di bawah untuk mengetahui apakah Anda sebaiknya melakukan '
     'latihan <b>Intensitas Tinggi</b> atau <b>Rendah</b>, lengkap dengan rekomendasi jenis olahraga '
-    'berbasis <i>rule-based system</i>.</p>',
+    'berdasarkan profil aktivitas fisik pengguna.</p>',  # Perbaikan poin 1
     unsafe_allow_html=True
 )
 
@@ -205,17 +305,59 @@ with center:
     st.markdown('<div class="profile-card">', unsafe_allow_html=True)
     st.markdown('<p class="profile-title">👤 User Profile</p>', unsafe_allow_html=True)
 
+    # Panduan pengisian form untuk user yang bingung dengan istilah/nilai yang diminta
+    with st.expander("ℹ️ Bingung mengisi form? Klik di sini untuk panduan singkat"):
+        st.markdown("""
+        - **Resting BPM (Detak Jantung Istirahat)**: detak jantung per menit saat tubuh benar-benar rileks,
+          idealnya diukur pagi hari sebelum bangun dari tempat tidur. Rentang normal orang dewasa: 60-100 bpm, cara mengetahuinya bisa dengan cara manual dengan menekan denyut nadi menggunakan ibu jari atau dengan perangkat smartwatch.
+        - **Persentase Lemak Tubuh**: proporsi lemak dari total berat badan. Bisa diukur pakai alat
+          *body fat scale*, atau estimasi kasar: pria dewasa sehat umumnya 10-20%, wanita 18-28% ,dan anda juga bisa melakukan pengukuran manual menggunakan kalkulator lemak tubuh untuk mengetahui berapa jumlah persentase lemak tubuh anda secara pasti.
+        - **Level Pengalaman**:
+            - *Pemula* — baru mulai atau latihan rutin < 6 bulan.
+            - *Menengah* — latihan rutin 6 bulan - 2 tahun.
+            - *Ahli* — latihan konsisten > 2 tahun.
+        - **Frekuensi Latihan**: rata-rata jumlah hari Anda berolahraga dalam seminggu (termasuk jalan kaki/kardio ringan).
+        - **Asupan Air Harian**: perkiraan total air yang Anda minum per hari, termasuk dari minuman lain.
+        - Tidak yakin dengan angka pastinya? Isi dengan estimasi terbaik — hasil analisis tetap bisa
+          jadi acuan awal, bukan diagnosis pasti.
+        """)
+
     row1_c1, row1_c2 = st.columns(2)
     with row1_c1:
-        gender = st.selectbox("Jenis Kelamin", ["Male", "Female"])
-        exp = st.selectbox("Level Pengalaman", [("Pemula", 1), ("Menengah", 2), ("Ahli", 3)], format_func=lambda x: x[0])
-        rbpm = st.number_input("Resting BPM (Detak Jantung Istirahat)", 40, 110, 65)
-        fat = st.slider("Persentase Lemak Tubuh (%)", 5.0, 50.0, 20.0)
+        gender = st.selectbox(
+            "Jenis Kelamin", ["Male", "Female"],
+            help="Digunakan untuk menyesuaikan estimasi kebutuhan fisiologis dalam model."
+        )
+        exp = st.selectbox(
+            "Level Pengalaman", [("Pemula", 1), ("Menengah", 2), ("Ahli", 3)], format_func=lambda x: x[0],
+            help="Pemula: <6 bulan latihan rutin. Menengah: 6 bulan-2 tahun. Ahli: >2 tahun latihan konsisten."
+        )
+        # Perbaikan poin 2: minimum Resting BPM dinaikkan dari 40 -> 50 agar lebih realistis
+        rbpm = st.number_input(
+            "Resting BPM (Detak Jantung Istirahat)", 50, 110, 65,
+            help="Detak jantung saat istirahat total, biasanya diukur pagi hari sebelum bangun. "
+                 "Rentang normal orang dewasa: 60-100 bpm."
+        )
+        fat = st.slider(
+            "Persentase Lemak Tubuh (%)", 5.0, 50.0, 20.0,
+            help="Persentase lemak dari total berat badan. Pria dewasa sehat umumnya 10-20%, wanita 18-28%. "
+                 "Tidak tahu angka pastinya? Isi dengan estimasi terdekat."
+        )
     with row1_c2:
-        age = st.slider("Usia", 10, 90, 30)
-        freq = st.slider("Frekuensi Latihan (hari/minggu)", 1, 7, 3)
-        wgt = st.number_input("Berat Badan (kg)", 40.0, 150.0, 70.0)
-        wtr = st.slider("Asupan Air Harian (Liter)", 0.5, 5.0, 2.5)
+        age = st.slider("Usia", 10, 90, 30, help="Usia Anda saat ini dalam tahun.")
+        freq = st.slider(
+            "Frekuensi Latihan (hari/minggu)", 1, 7, 3,
+            help="Rata-rata jumlah hari Anda berolahraga dalam seminggu."
+        )
+        wgt = st.number_input(
+            "Berat Badan (kg)", 40.0, 150.0, 70.0,
+            help="Berat badan Anda saat ini dalam kilogram."
+        )
+        wtr = st.slider(
+            "Asupan Air Harian (Liter)", 0.5, 5.0, 2.5,
+            help="Rata-rata kebutuhan air harian orang dewasa aktif sekitar 2-3 liter, "
+                 "termasuk dari minuman lain."
+        )
 
     st.markdown("<br>", unsafe_allow_html=True)
     analyze_btn = st.button("💡 Analisis Intensitas Olahraga", use_container_width=True, type="primary")
@@ -247,14 +389,15 @@ for col in features:
 inp_scaled = scaler.transform(inp_df[features])
 
 # ============================================
-# 9. PREDIKSI & REKOMENDASI (RULE-BASED)
+# 9. PREDIKSI & REKOMENDASI
 # ============================================
 if analyze_btn:
     prediction = model.predict(inp_scaled)[0]
     probs = model.predict_proba(inp_scaled)[0]
     conf_score = max(probs) * 100
+    conf_text, conf_class = get_confidence_label(conf_score)
 
-    # --- Ambil rekomendasi dari rule-based system ---
+    # --- Ambil rekomendasi dari sistem berbasis profil pengguna ---
     age_group = get_age_group(age)
     intensity_key = "Berat" if prediction == "High" else "Ringan"
     exp_level = exp[1]
@@ -290,13 +433,19 @@ if analyze_btn:
             </div>
             """, unsafe_allow_html=True)
 
-        st.markdown('<p class="metric-label">Confidence Score</p>', unsafe_allow_html=True)
+        # Perbaikan poin 5: label interpretasi confidence score
+        st.markdown(
+            f'<p class="metric-label">Confidence Score '
+            f'<span class="confidence-tag {conf_class}">{conf_text}</span></p>',
+            unsafe_allow_html=True
+        )
         st.progress(int(conf_score))
         st.markdown(f"**{conf_score:.1f}%**")
 
     with col2:
         st.markdown('<p class="section-title">💪 Saran Jenis Latihan</p>', unsafe_allow_html=True)
 
+        # Perbaikan poin 6: tag kelompok usia + level pengalaman selalu ditampilkan untuk semua profil
         st.markdown(f"""
         <div class="meta-info">
             <span class="meta-badge">📅 {AGE_GROUP_LABELS[age_group]}</span>
@@ -304,14 +453,20 @@ if analyze_btn:
         </div>
         """, unsafe_allow_html=True)
 
-        # Render tiap grup dengan warna khusus
+        # Render tiap grup dengan warna khusus + deskripsi singkat (perbaikan poin 3)
         groups_html = ""
         for wtype, ex_list in grouped.items():
             if not ex_list:
                 continue
             colors = TYPE_COLORS[wtype]
-            items_html = "".join([f"<div class='tip-item'>🏃 {ex}</div>" for ex in ex_list])
-            
+            items_html = "".join([
+                f"""<div class='tip-item'>
+                        <div class='tip-title'>🏃 {ex}</div>
+                        <div class='tip-desc'>{get_exercise_description(ex)}</div>
+                    </div>"""
+                for ex in ex_list
+            ])
+
             groups_html += f"""
             <div style='margin-bottom:14px;'>
                 <span style='background-color:{colors["bg"]}; color:{colors["text"]};
@@ -322,7 +477,7 @@ if analyze_btn:
                 <div style='margin-top:4px;'>{items_html}</div>
             </div>
             """
-        
+
         st.markdown(groups_html, unsafe_allow_html=True)
 
         if age >= 50:
@@ -331,5 +486,25 @@ if analyze_btn:
                 ⚠️ <b>Catatan:</b> Mengingat usia Anda, pastikan melakukan pemanasan sendi lebih lama.
             </div>
             """, unsafe_allow_html=True)
+
+    # Perbaikan poin 4: disclaimer kesehatan di bagian bawah aplikasi
+    st.markdown("""
+    <div class="disclaimer-box">
+        ⚠️ <b>Disclaimer:</b> Rekomendasi ini bersifat indikatif dan dihasilkan dari model prediktif
+        berdasarkan data umum, sehingga tidak menggantikan saran dari tenaga profesional kesehatan
+        atau pelatih kebugaran bersertifikat. Bagi pengguna dengan riwayat penyakit jantung, cedera,
+        atau kondisi kesehatan khusus, konsultasikan terlebih dahulu dengan dokter atau ahli sebelum
+        memulai program latihan baru.
+    </div>
+    """, unsafe_allow_html=True)
+
 else:
     st.info("👆 Lengkapi profil Anda di atas, lalu klik tombol **Analisis Intensitas Olahraga** untuk melihat hasil.")
+
+    # Disclaimer tetap tampil di halaman awal agar selalu terlihat
+    st.markdown("""
+    <div class="disclaimer-box">
+        ⚠️ <b>Disclaimer:</b> Rekomendasi pada aplikasi ini bersifat indikatif dan tidak menggantikan
+        saran dari tenaga profesional kesehatan atau pelatih kebugaran bersertifikat.
+    </div>
+    """, unsafe_allow_html=True)
