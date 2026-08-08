@@ -325,7 +325,7 @@ with center:
     row1_c1, row1_c2 = st.columns(2)
     with row1_c1:
         gender = st.selectbox(
-            "Jenis Kelamin", ["Male", "Female"],
+            "Jenis Kelamin", ["Laki-Laki", "Perempuan"],
             help="Digunakan untuk menyesuaikan estimasi kebutuhan fisiologis dalam model."
         )
         exp = st.selectbox(
@@ -368,7 +368,7 @@ with center:
 # ============================================
 user_data = {
     "age": age,
-    "gender": 1 if gender == "Male" else 0,
+    "gender": 1 if gender == "Laki-Laki" else 0,
     "experience_level": exp[1],
     "workout_frequency_days_week": freq,
     "water_intake_liters": wtr,
